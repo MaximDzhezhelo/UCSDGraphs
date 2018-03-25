@@ -1,14 +1,12 @@
 package basicgraph;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import util.GraphLoader;
+
+import static java.util.Comparator.*;
+import static java.util.stream.Collectors.toList;
 
 /** An abstract class that implements a directed graph. 
  * The graph may have self-loops, parallel edges. 
@@ -121,8 +119,19 @@ public abstract class Graph {
 	 * @return The degree sequence of this graph.
 	 */
 	public List<Integer> degreeSequence() {
-		// XXX: Implement in part 1 of week 2
-		return null;
+		final List<Integer> degree = new ArrayList<>();
+		for(int i = 0; i < numVertices; i++ ){
+			degree.addAll(getInNeighbors(i));
+			degree.addAll(getNeighbors(i));
+		}
+
+		return degree.stream()
+				.collect(Collectors.groupingBy(e -> e, Collectors.counting()))
+				.entrySet().stream()
+				.map(Map.Entry::getValue)
+				.sorted(reverseOrder())
+				.map(Long::intValue)
+				.collect(toList());
 	}
 	
 	/**
@@ -243,7 +252,15 @@ public abstract class Graph {
 		GraphAdjList graphFromFile = new GraphAdjList();
 		GraphLoader.loadRoadMap("data/testdata/simpletest.map", graphFromFile);
 		System.out.println(graphFromFile);
-		
+
+		System.out.println(">>>>>>>>>>>>>>>>>>>>>");
+		final List<Integer> degree = graphFromFile.degreeSequence();
+		System.out.println(">>>>>>>>>>>>>>>>>>>>> degree " + degree);
+
+		System.out.println(">>>>>>>>>>>>>>>>>>>>>");
+		final List<Integer> distance2 = graphFromFile.getDistance2(0);
+		System.out.println(">>>>>>>>>>>>>>>>>>>>> distance2 " + distance2);
+
 		System.out.println("Observe all degrees are <= 12.");
 		System.out.println("****");
 
