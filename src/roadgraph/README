@@ -1,0 +1,13 @@
+Class: MapGraph
+
+Modifications made to MapGraph (what and why): supported some methods such us MapGraph(), addVertex(), addEdge(),
+getNumVertices(), getVertices(), getNumEdges() ,  bfs(GeographicPoint start, GeographicPoint goal, Consumer<GeographicPoint> nodeSearched).
+Added and executed logic described in assignment;
+
+Class name: Vertex
+
+Purpose and description of class: This is a java representation of Vertex. It consists fields: location, name and edges. You can get access to field across getters and setters.
+
+Class name: Edge
+
+Purpose and description of class:This is a java representation of Edge. It consists fields: start point, end point, street name, lengths, road type. You can get access to field across getters and setters.

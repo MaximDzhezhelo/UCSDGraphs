@@ -8,12 +8,15 @@
 package roadgraph;
 
 
-import java.util.List;
-import java.util.Set;
-import java.util.function.Consumer;
-
 import geography.GeographicPoint;
 import util.GraphLoader;
+
+import java.util.*;
+import java.util.function.Consumer;
+
+import static java.util.Objects.isNull;
+import static java.util.stream.Collectors.toList;
+import static roadgraph.Vertex.of;
 
 /**
  * @author UCSD MOOC development team and YOU
@@ -23,15 +26,15 @@ import util.GraphLoader;
  *
  */
 public class MapGraph {
-	//TODO: Add your member variables here in WEEK 3
-	
-	
+
+	private Map<GeographicPoint, Vertex> vertexMap;
+
 	/** 
 	 * Create a new empty MapGraph 
 	 */
 	public MapGraph()
 	{
-		// TODO: Implement in this constructor in WEEK 3
+		vertexMap = new HashMap<>();
 	}
 	
 	/**
@@ -40,8 +43,7 @@ public class MapGraph {
 	 */
 	public int getNumVertices()
 	{
-		//TODO: Implement this method in WEEK 3
-		return 0;
+		return vertexMap.size();
 	}
 	
 	/**
@@ -50,22 +52,22 @@ public class MapGraph {
 	 */
 	public Set<GeographicPoint> getVertices()
 	{
-		//TODO: Implement this method in WEEK 3
-		return null;
+		return vertexMap.keySet();
 	}
 	
 	/**
 	 * Get the number of road segments in the graph
 	 * @return The number of edges in the graph.
 	 */
-	public int getNumEdges()
-	{
-		//TODO: Implement this method in WEEK 3
-		return 0;
+	public int getNumEdges() {
+		return vertexMap.values().stream()
+				.map(Vertex::getEdges)
+				.flatMap(Collection::stream)
+				.collect(toList())
+				.size();
 	}
 
-	
-	
+
 	/** Add a node corresponding to an intersection at a Geographic Point
 	 * If the location is already in the graph or null, this method does 
 	 * not change the graph.
@@ -75,8 +77,12 @@ public class MapGraph {
 	 */
 	public boolean addVertex(GeographicPoint location)
 	{
-		// TODO: Implement this method in WEEK 3
-		return false;
+		if(isNull(location)) return false;
+
+		if(vertexMap.containsKey(location)) return false;
+
+		vertexMap.put(location, of(location));
+		return true;
 	}
 	
 	/**
@@ -93,9 +99,9 @@ public class MapGraph {
 	 */
 	public void addEdge(GeographicPoint from, GeographicPoint to, String roadName,
 			String roadType, double length) throws IllegalArgumentException {
-
-		//TODO: Implement this method in WEEK 3
-		
+		vertexMap.get(from)
+				.getEdges()
+				.add(Edge.of(from, to, roadName, roadType, length));
 	}
 	
 
@@ -123,14 +129,79 @@ public class MapGraph {
 	public List<GeographicPoint> bfs(GeographicPoint start, 
 			 					     GeographicPoint goal, Consumer<GeographicPoint> nodeSearched)
 	{
-		// TODO: Implement this method in WEEK 3
-		
-		// Hook for visualization.  See writeup.
-		//nodeSearched.accept(next.getLocation());
+		if (isNull(start) || isNull(goal)) {
+			System.out.println("Start or goal node is null!  No path exists.");
+			return new LinkedList<GeographicPoint>();
+		}
 
-		return null;
+		final Vertex vertexStart = vertexMap.get(start);
+		final Vertex vertexGoal = vertexMap.get(goal);
+		if(isNull(vertexStart) || isNull(vertexGoal)) {
+			System.out.println("Start or goal geographic point doesn't exist in Graph.");
+			return new LinkedList<GeographicPoint>();
+		}
+
+		final Map<Vertex, Vertex> parentMap = new HashMap<>();
+
+		final boolean found = bfsSearch(vertexStart, vertexGoal, parentMap);
+
+		if (!found) {
+			System.out.println("No path exists");
+			return new ArrayList<>();
+		}
+
+		return constructPath(vertexStart, vertexGoal, parentMap);
 	}
-	
+
+	private boolean bfsSearch(final Vertex vertexStart, final Vertex vertexGoal,
+							  final Map<Vertex, Vertex> parentMap) {
+		final Set<Vertex> visited = new HashSet<>();
+		final Queue<Vertex> toExplore = new LinkedList<>();
+
+		toExplore.add(vertexStart);
+
+		boolean found = false;
+
+		while (!toExplore.isEmpty()) {
+			final Vertex curr = toExplore.remove();
+			if (curr.equals(vertexGoal)) {
+				found = true;
+				break;
+			}
+
+			final List<Vertex> neighbors = curr.getEdges().stream()
+					.map(Edge::getEndPoint)
+					.map(point -> vertexMap.get(point))
+					.filter(Objects::nonNull)
+					.collect(toList());
+
+			final ListIterator<Vertex> it = neighbors.listIterator(neighbors.size());
+			while (it.hasPrevious()) {
+				final Vertex next = it.previous();
+				if (!visited.contains(next)) {
+					visited.add(next);
+					parentMap.put(next, curr);
+					toExplore.add(next);
+				}
+			}
+		}
+		return found;
+	}
+
+	private static List<GeographicPoint> constructPath(final Vertex vertexStart, final Vertex vertexGoal,
+													   final Map<Vertex, Vertex> parentMap) {
+		final LinkedList<Vertex> path = new LinkedList<>();
+		Vertex curr = vertexGoal;
+		while (curr != vertexStart) {
+			path.addFirst(curr);
+			curr = parentMap.get(curr);
+		}
+		path.addFirst(vertexStart);
+
+		return path.stream()
+				.map(Vertex::getLocation)
+				.collect(toList());
+	}
 
 	/** Find the path from start to goal using Dijkstra's algorithm
 	 * 
@@ -206,7 +277,18 @@ public class MapGraph {
 		System.out.print("DONE. \nLoading the map...");
 		GraphLoader.loadRoadMap("data/testdata/simpletest.map", firstMap);
 		System.out.println("DONE.");
-		
+
+		final int numEdges = firstMap.getNumEdges();
+		System.out.println(">>>>num edges " + numEdges);
+
+		final int numVertices = firstMap.getNumVertices();
+		System.out.println(">>>>num Vertices " + numVertices);
+
+
+		final GeographicPoint testStart = new GeographicPoint(1.0, 1.0);
+		final GeographicPoint testEnd = new GeographicPoint(6.5, 0.0);
+		final List<GeographicPoint> bfs = firstMap.bfs(testStart, testEnd);
+		System.out.println(">>>>>> " + bfs);
 		// You can use this method for testing.  
 		
 		
