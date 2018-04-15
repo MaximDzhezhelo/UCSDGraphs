@@ -1,61 +1,1 @@
-package roadgraph;
-
-import geography.GeographicPoint;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-
-/**
- * A class that represents a vertex, represented using a graph.
- *
- * @author makson
- *
- */
-public class Vertex {
-    private GeographicPoint location;
-    private String name;
-    private List<Edge> edges = new ArrayList<>();
-
-    /**
-     * Create a new vertex with completed location
-     */
-    public static Vertex of(GeographicPoint location){
-        final Vertex vertex = new Vertex();
-        vertex.setLocation(location);
-        return vertex;
-    }
-
-    public GeographicPoint getLocation() { return location; }
-    public void setLocation(GeographicPoint location) { this.location = location; }
-
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name;}
-
-    public List<Edge> getEdges() { return edges; }
-    public void setEdges(List<Edge> edges) { this.edges = edges; }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Vertex)) return false;
-        Vertex vertex = (Vertex) o;
-        return Objects.equals(getLocation(), vertex.getLocation()) &&
-                Objects.equals(getName(), vertex.getName()) &&
-                Objects.equals(getEdges(), vertex.getEdges());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(getLocation(), getName(), getEdges());
-    }
-
-    @Override
-    public String toString() {
-        return "Vertex{" +
-                "location=" + location +
-                ", name='" + name + '\'' +
-                ", edges=" + edges +
-                '}';
-    }
-}
+package roadgraph;import geography.GeographicPoint;import java.util.*;/** * A class that represents a vertex, represented using a graph. * * @author makson * */public class Vertex implements Comparable<Vertex>{    private GeographicPoint location;    private String name;    private List<Edge> edges = new ArrayList<>();    private double distance = Double.POSITIVE_INFINITY;    private double actualDistance = Double.POSITIVE_INFINITY;    /**     * Create a new vertex with completed location     */    public static Vertex of(GeographicPoint location){        final Vertex vertex = new Vertex();        vertex.setLocation(location);        return vertex;    }    public int compareTo(Vertex other){ return Double.compare(distance,other.distance); }    public GeographicPoint getLocation() { return location; }    public void setLocation(GeographicPoint location) { this.location = location; }    public String getName() { return name; }    public void setName(String name) { this.name = name;}    public List<Edge> getEdges() { return edges; }    public void setEdges(List<Edge> edges) { this.edges = edges; }    public double getDistance() { return distance; }    public void setDistance(double minDistance) { this.distance = minDistance; }    public double getActualDistance() { return actualDistance; }    public void setActualDistance(double actualDistance) { this.actualDistance = actualDistance; }    /** Return the neighbors of this Vertex */    Set<GeographicPoint> getNeighbors()    {        Set<GeographicPoint> neighbors = new HashSet<>();        for (Edge edge : edges) {            neighbors.add(edge.getOtherNode(location));        }        return neighbors;    }    @Override    public boolean equals(Object o) {        if (this == o) return true;        if (!(o instanceof Vertex)) return false;        Vertex vertex = (Vertex) o;        return Double.compare(vertex.getDistance(), getDistance()) == 0 &&                Double.compare(vertex.getActualDistance(), getActualDistance()) == 0 &&                Objects.equals(getLocation(), vertex.getLocation()) &&                Objects.equals(getName(), vertex.getName()) &&                Objects.equals(getEdges(), vertex.getEdges());    }    @Override    public int hashCode() {        return Objects.hash(getLocation(), getName(), getEdges(), getDistance(), getActualDistance());    }    @Override    public String toString() {        return "Vertex{" +                "location=" + location +                ", name='" + name + '\'' +                ", edges=" + edges +                ", distance=" + distance +                ", actualDistance=" + actualDistance +                '}';    }}
