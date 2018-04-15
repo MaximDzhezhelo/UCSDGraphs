@@ -28,6 +28,7 @@ import static roadgraph.Vertex.of;
  */
 public class MapGraph {
 
+    // repository which consists of vertices
     private Map<GeographicPoint, Vertex> vertexMap;
 
     /**
@@ -185,6 +186,9 @@ public class MapGraph {
         return found;
     }
 
+    /**
+     * Reconstruct the parent path
+     */
     private static List<GeographicPoint> constructPath(final Vertex vertexStart, final Vertex vertexGoal,
                                                        final Map<Vertex, Vertex> parentMap) {
         final LinkedList<Vertex> path = new LinkedList<>();
